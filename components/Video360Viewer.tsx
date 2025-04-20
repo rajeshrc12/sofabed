@@ -1,5 +1,6 @@
 "use client";
 import React, { useRef, useState, useEffect } from "react";
+import { Maximize2, Minimize2 } from "lucide-react";
 
 type Video360ViewerProps = {
   src: string;
@@ -8,18 +9,18 @@ type Video360ViewerProps = {
 };
 
 const Video360Viewer: React.FC<Video360ViewerProps> = ({ src, frameCount, duration }) => {
+  const containerRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [startX, setStartX] = useState(0);
   const [currentFrame, setCurrentFrame] = useState(0);
   const [zoomed, setZoomed] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
   const deltaXRef = useRef(0);
-
-  // Throttle mechanism to avoid too many updates
   const lastUpdateTimeRef = useRef(0);
-  const frameUpdateInterval = 100; // milliseconds
+  const frameUpdateInterval = 100;
 
-  // Mouse events
+  // Drag handlers
   const handleMouseDown = (e: React.MouseEvent) => {
     setIsDragging(true);
     setStartX(e.clientX);
@@ -35,7 +36,6 @@ const Video360Viewer: React.FC<Video360ViewerProps> = ({ src, frameCount, durati
     handleDrag(e.clientX);
   };
 
-  // Touch events
   const handleTouchStart = (e: React.TouchEvent) => {
     setIsDragging(true);
     setStartX(e.touches[0].clientX);
@@ -60,14 +60,12 @@ const Video360Viewer: React.FC<Video360ViewerProps> = ({ src, frameCount, durati
     setStartX(clientX);
 
     const threshold = 10;
-
     if (Math.abs(deltaXRef.current) >= threshold) {
-      const direction = deltaXRef.current > 0 ? -1 : 1;
+      const direction = deltaXRef.current > 0 ? -1 : 1; // corrected direction
       let newFrame = (currentFrame + direction) % frameCount;
       if (newFrame < 0) newFrame += frameCount;
 
       setCurrentFrame(newFrame);
-
       const video = videoRef.current;
       if (video) {
         const timePerFrame = duration / frameCount;
@@ -83,6 +81,17 @@ const Video360Viewer: React.FC<Video360ViewerProps> = ({ src, frameCount, durati
     setZoomed((prev) => !prev);
   };
 
+  const toggleFullscreen = () => {
+    const elem = containerRef.current;
+    if (!elem) return;
+
+    if (!document.fullscreenElement) {
+      elem.requestFullscreen?.();
+    } else {
+      document.exitFullscreen?.();
+    }
+  };
+
   useEffect(() => {
     const video = videoRef.current;
     if (video) {
@@ -91,9 +100,20 @@ const Video360Viewer: React.FC<Video360ViewerProps> = ({ src, frameCount, durati
     }
   }, [currentFrame, duration, frameCount]);
 
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+    document.addEventListener("fullscreenchange", handleFullscreenChange);
+    return () => {
+      document.removeEventListener("fullscreenchange", handleFullscreenChange);
+    };
+  }, []);
+
   return (
     <div
-      className={`w-full overflow-hidden touch-none ${zoomed ? "cursor-zoom-out" : "cursor-zoom-in"}`}
+      ref={containerRef}
+      className={`relative w-full overflow-hidden touch-none ${zoomed ? "cursor-zoom-out" : "cursor-zoom-in"}`}
       onMouseDown={handleMouseDown}
       onMouseUp={handleMouseUp}
       onMouseMove={handleMouseMove}
@@ -111,6 +131,11 @@ const Video360Viewer: React.FC<Video360ViewerProps> = ({ src, frameCount, durati
         preload="auto"
         className={`w-full select-none pointer-events-none transition-transform duration-300 ease-in-out ${zoomed ? "scale-150" : "scale-100"}`}
       />
+
+      {/* Fullscreen Button */}
+      <button onClick={toggleFullscreen} className="absolute bottom-3 left-1/2 transform -translate-x-1/2 bg-black bg-opacity-50 text-white rounded-full p-2 hover:bg-opacity-80 transition">
+        {isFullscreen ? <Minimize2 size={20} /> : <Maximize2 size={20} />}
+      </button>
     </div>
   );
 };

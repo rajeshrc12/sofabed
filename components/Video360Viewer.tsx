@@ -15,6 +15,7 @@ const Video360Viewer: React.FC<Video360ViewerProps> = ({ src, frameCount, durati
   const [zoomed, setZoomed] = useState(false);
   const deltaXRef = useRef(0);
 
+  // Mouse events
   const handleMouseDown = (e: React.MouseEvent) => {
     setIsDragging(true);
     setStartX(e.clientX);
@@ -27,10 +28,29 @@ const Video360Viewer: React.FC<Video360ViewerProps> = ({ src, frameCount, durati
 
   const handleMouseMove = (e: React.MouseEvent) => {
     if (!isDragging) return;
+    handleDrag(e.clientX);
+  };
 
-    const deltaX = e.clientX - startX;
+  // Touch events
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setIsDragging(true);
+    setStartX(e.touches[0].clientX);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!isDragging) return;
+    handleDrag(e.touches[0].clientX);
+  };
+
+  const handleTouchEnd = () => {
+    setIsDragging(false);
+    deltaXRef.current = 0;
+  };
+
+  const handleDrag = (clientX: number) => {
+    const deltaX = clientX - startX;
     deltaXRef.current += deltaX;
-    setStartX(e.clientX);
+    setStartX(clientX);
 
     const threshold = 10;
 
@@ -65,12 +85,15 @@ const Video360Viewer: React.FC<Video360ViewerProps> = ({ src, frameCount, durati
 
   return (
     <div
-      className={`w-full overflow-hidden ${zoomed ? "cursor-zoom-out" : "cursor-zoom-in"}`}
+      className={`w-full overflow-hidden touch-none ${zoomed ? "cursor-zoom-out" : "cursor-zoom-in"}`}
       onMouseDown={handleMouseDown}
       onMouseUp={handleMouseUp}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseUp}
       onDoubleClick={handleDoubleClick}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
     >
       <video
         ref={videoRef}

@@ -20,7 +20,6 @@ const Video360Viewer: React.FC<Video360ViewerProps> = ({ src, frameCount, durati
   const lastUpdateTimeRef = useRef(0);
   const frameUpdateInterval = 100;
 
-  // Drag handlers
   const handleMouseDown = (e: React.MouseEvent) => {
     setIsDragging(true);
     setStartX(e.clientX);
@@ -61,11 +60,12 @@ const Video360Viewer: React.FC<Video360ViewerProps> = ({ src, frameCount, durati
 
     const threshold = 10;
     if (Math.abs(deltaXRef.current) >= threshold) {
-      const direction = deltaXRef.current > 0 ? -1 : 1; // corrected direction
+      const direction = deltaXRef.current > 0 ? -1 : 1;
       let newFrame = (currentFrame + direction) % frameCount;
       if (newFrame < 0) newFrame += frameCount;
 
       setCurrentFrame(newFrame);
+
       const video = videoRef.current;
       if (video) {
         const timePerFrame = duration / frameCount;
@@ -111,31 +111,32 @@ const Video360Viewer: React.FC<Video360ViewerProps> = ({ src, frameCount, durati
   }, []);
 
   return (
-    <div
-      ref={containerRef}
-      className={`relative w-full overflow-hidden touch-none ${zoomed ? "cursor-zoom-out" : "cursor-zoom-in"}`}
-      onMouseDown={handleMouseDown}
-      onMouseUp={handleMouseUp}
-      onMouseMove={handleMouseMove}
-      onMouseLeave={handleMouseUp}
-      onDoubleClick={handleDoubleClick}
-      onTouchStart={handleTouchStart}
-      onTouchMove={handleTouchMove}
-      onTouchEnd={handleTouchEnd}
-    >
-      <video
-        ref={videoRef}
-        src={src}
-        muted
-        playsInline
-        preload="auto"
-        className={`w-full select-none pointer-events-none transition-transform duration-300 ease-in-out ${zoomed ? "scale-150" : "scale-100"}`}
-      />
+    <div className="bg-white flex justify-center items-center p-4">
+      <div
+        ref={containerRef}
+        className={`relative touch-none max-w-full w-full h-auto aspect-video ${zoomed ? "cursor-zoom-out" : "cursor-zoom-in"}`}
+        onMouseDown={handleMouseDown}
+        onMouseUp={handleMouseUp}
+        onMouseMove={handleMouseMove}
+        onMouseLeave={handleMouseUp}
+        onDoubleClick={handleDoubleClick}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+      >
+        <video
+          ref={videoRef}
+          src={src}
+          muted
+          playsInline
+          preload="auto"
+          className={`w-full h-full object-contain select-none pointer-events-none transition-transform duration-300 ease-in-out ${zoomed ? "scale-150" : "scale-100"}`}
+        />
 
-      {/* Fullscreen Button */}
-      <button onClick={toggleFullscreen} className="absolute bottom-3 left-1/2 transform -translate-x-1/2 bg-black bg-opacity-50 text-white rounded-full p-2 hover:bg-opacity-80 transition">
-        {isFullscreen ? <Minimize2 size={20} /> : <Maximize2 size={20} />}
-      </button>
+        <button onClick={toggleFullscreen} className="absolute bottom-3 left-1/2 transform -translate-x-1/2 bg-black bg-opacity-50 text-white rounded-full p-2 hover:bg-opacity-80 transition">
+          {isFullscreen ? <Minimize2 size={20} /> : <Maximize2 size={20} />}
+        </button>
+      </div>
     </div>
   );
 };

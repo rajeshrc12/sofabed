@@ -15,6 +15,10 @@ const Video360Viewer: React.FC<Video360ViewerProps> = ({ src, frameCount, durati
   const [zoomed, setZoomed] = useState(false);
   const deltaXRef = useRef(0);
 
+  // Throttle mechanism to avoid too many updates
+  const lastUpdateTimeRef = useRef(0);
+  const frameUpdateInterval = 100; // milliseconds
+
   // Mouse events
   const handleMouseDown = (e: React.MouseEvent) => {
     setIsDragging(true);
@@ -48,6 +52,9 @@ const Video360Viewer: React.FC<Video360ViewerProps> = ({ src, frameCount, durati
   };
 
   const handleDrag = (clientX: number) => {
+    const now = Date.now();
+    if (now - lastUpdateTimeRef.current < frameUpdateInterval) return;
+
     const deltaX = clientX - startX;
     deltaXRef.current += deltaX;
     setStartX(clientX);
@@ -68,6 +75,7 @@ const Video360Viewer: React.FC<Video360ViewerProps> = ({ src, frameCount, durati
       }
 
       deltaXRef.current = 0;
+      lastUpdateTimeRef.current = now;
     }
   };
 

@@ -62,7 +62,7 @@ const Video360Viewer: React.FC<Video360ViewerProps> = ({ src, frameCount, durati
     const threshold = 10;
 
     if (Math.abs(deltaXRef.current) >= threshold) {
-      const direction = deltaXRef.current > 0 ? 1 : -1;
+      const direction = deltaXRef.current > 0 ? -1 : 1;
       let newFrame = (currentFrame + direction) % frameCount;
       if (newFrame < 0) newFrame += frameCount;
 
